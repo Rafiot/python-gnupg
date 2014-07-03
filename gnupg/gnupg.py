@@ -32,7 +32,6 @@ from codecs     import open as open
 import codecs
 
 import encodings
-import exceptions
 import functools
 import os
 import re
@@ -205,7 +204,7 @@ class GPG(GPGBase):
     def _strict_handler(self, exception):
         return u"", exception.end
 
-    def dirty_ignore_encoding(self):
+    def dirty_encoding_ignore(self):
         codecs.register_error("strict", self._strict_handler)
 
     def is_gpg1(self):
@@ -248,7 +247,7 @@ class GPG(GPGBase):
             :command:`$ gpg --with-colons --list-config digestname`.
             The default, if unspecified, is ``'SHA512'``.
         """
-        if 'default_key' in kwargs.items():
+        if 'default_key' in kwargs:
             log.info("Signing message '%r' with keyid: %s"
                      % (data, kwargs['default_key']))
         else:
@@ -423,7 +422,7 @@ class GPG(GPGBase):
             fingerprints = ' '.join(fingerprints)
 
         args = ['--batch']
-        args.append("--delete-{} {}".format(which, fingerprints))
+        args.append("--delete-{0} {1}".format(which, fingerprints))
 
         result = self._result_map['delete'](self)
         p = self._open_subprocess(args)
@@ -448,7 +447,7 @@ class GPG(GPGBase):
             keyids = ' '.join(['%s' % k for k in keyids])
 
         args = ["--armor"]
-        args.append("--export{} {}".format(which, keyids))
+        args.append("--export{0} {1}".format(which, keyids))
 
         p = self._open_subprocess(args)
         ## gpg --export produces no status-fd output; stdout will be empty in
@@ -579,13 +578,13 @@ class GPG(GPGBase):
                 if os.path.isfile(self.temp_keyring):
                     prefix = os.path.join(self.temp_keyring, fpr)
                     try: os.rename(self.temp_keyring, prefix+".pubring")
-                    except OSError as ose: log.error(ose.message)
+                    except OSError as ose: log.error(str(ose))
 
             if self.temp_secring:
                 if os.path.isfile(self.temp_secring):
                     prefix = os.path.join(self.temp_secring, fpr)
                     try: os.rename(self.temp_secring, prefix+".secring")
-                    except OSError as ose: log.error(ose.message)
+                    except OSError as ose: log.error(str(ose))
 
         log.info("Key created. Fingerprint: %s" % fpr)
         key.keyring = self.temp_keyring
